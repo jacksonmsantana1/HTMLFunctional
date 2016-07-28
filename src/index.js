@@ -25,7 +25,7 @@ const HTMLFunctional = function HTMLFunctional() {};
 // createShadowDom :: HTMLElement -> ShadowRoot
 const createShadowDom = (elem) =>
   Maybe.fromNullable(elem).chain((htmlElem) => {
-    if (!!htmlElem.createShadowRoot) {
+    if (htmlElem.createShadowRoot) {
       return Maybe.Just(htmlElem);
     }
 
@@ -52,16 +52,22 @@ const setAttr = curry((obj, attr, val) => new IO(() => {
 const getDOM = IO.of(window.document);
 
 // getElementsByTagName :: String -> IO([HTMLElement])
-const getElementsByTagName = (tag) => getDOM.map((doc) => (doc.getElementsByTagName(tag)));
+const getElementsByTagName = (tag) => getDOM.map((doc) => (doc.getElementsByTagName(tag)))
+.map(Array.from);
 
 // getElementByTagName :: String -> IO(HTMLElement)
 const getElementByTagName = (tag) => getDOM.map((doc) => (doc.getElementsByTagName(tag)[0]));
 
 // getShadowRoot :: PwPinButton -> Maybe(ShadowRoot)
-const getShadowRoot = compose(chain(Maybe.fromNullable), map(get('shadowRoot')), Maybe.fromNullable);
+const getShadowRoot = compose(chain(Maybe.fromNullable),
+  map(get('shadowRoot')),
+  Maybe.fromNullable);
 
 // getChildNodes :: HTMLElement -> Maybe(Array)
-const getChildNodes = compose(map(Array.from), chain(Maybe.fromNullable), map(get('childNodes')), Maybe.fromNullable);
+const getChildNodes = compose(map(Array.from),
+  chain(Maybe.fromNullable),
+  map(get('childNodes')),
+  Maybe.fromNullable);
 
 // getPwProjectInfo :: String -> Either(PwProjectInfo, Error)
 const getPwProjectInfo = (pId) => getElementsByTagName('pw-project-info')
@@ -76,19 +82,17 @@ const getPwUserInfo = getElementsByTagName('pw-user-info')
 
 /*********************************Toggles*********************************/
 
-// toggleAttr :: HTMLElement -> String -> [String] -> Boolean -> HTMLElement
-const toggleAttr = (comp, attrName, attrValues) => {
+// toggleAttr :: HTMLElement -> String -> [String] -> Boolean -> IO
+const toggleAttr = (comp, attrName, attrValues) => (new IO(() => {
   const attr = get(attrName);
   const checkAttr = compose(equals(attrValues[0]), attr);
 
   if (checkAttr(comp)) {
-    setAttr(comp, attrName, attrValues[1]);
+    setAttr(comp, attrName, attrValues[1]).runIO();
   } else {
-    setAttr(comp, attrName, attrValues[0]);
+    setAttr(comp, attrName, attrValues[0]).runIO();
   }
-
-  return comp;
-};
+}));
 
 //toggleStyle :: String -> DOMTokenList -> IO
 const toggleStyle = curry((styleAttr, classList) =>

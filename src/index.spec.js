@@ -60,9 +60,10 @@ describe('HTMLFunctional =>', () => {
     it('Should return the first element with the same tag given', () => {
       let fn = HTMLFunctional.getElementByTagName;
       let div = document.createElement('div');
-      document.body.appendChild(div);
 
-      expect(fn('div', document).runIO()).to.be.eql(div);
+      document.body.appendChild(div);
+      expect(fn('div').runIO()).to.be.eql(div);
+      document.body.removeChild(div);
     });
   });
 
@@ -70,12 +71,19 @@ describe('HTMLFunctional =>', () => {
     it('Should return the elements with the same tag given', () => {
       let fn = HTMLFunctional.getElementsByTagName;
       let div1 = document.createElement('div');
-      document.body.appendChild(div1);
-
       let div2 = document.createElement('div');
-      document.body.appendChild(div2);
 
-      expect(fn('div', document).runIO().length).to.be.equal(3);
+      document.body.appendChild(div1);
+      document.body.appendChild(div2);
+      expect(fn('div').runIO().length).to.be.equal(2);
+      document.body.removeChild(div1);
+      document.body.removeChild(div2);
+    });
+
+    it('Should return a IO([]) if none element is found', () => {
+      let fn = HTMLFunctional.getElementsByTagName;
+
+      expect(fn('div').runIO()).to.be.eql([]);
     });
   });
 
@@ -125,29 +133,66 @@ describe('HTMLFunctional =>', () => {
   });
 
   describe('getPwProjectInfo() ', () => {
-    it('Should ...', () => {
+    it('Should return an IO(Either(PwProjectInfo, Error))', () => {
+      let fn = HTMLFunctional.getPwProjectInfo;
+      let comp = document.createElement('pw-project-info');
+      comp.id = 'ID';
 
-      expect(true).to.be.equal(true);
+      document.body.appendChild(comp);
+      expect(fn('ID').runIO().get()).to.be.equal(comp);
+      expect(fn('ID').runIO().isRight).to.be.equal(true);
+      document.body.removeChild(comp);
+    });
+
+    it('Should return an IO(Either.Left) if none valid component is found', () => {
+      let fn = HTMLFunctional.getPwProjectInfo;
+      let comp = document.createElement('pw-project-info');
+      comp.id = 'invalid-id';
+
+      document.body.appendChild(comp);
+      expect(fn('id').runIO().isLeft).to.be.equal(true);
+      document.body.removeChild(comp);
     });
   });
 
   describe('getPwUserInfo() ', () => {
-    it('Should ...', () => {
+    it('Should return an IO(Either(PwUserInfo))', () => {
+      let fn = HTMLFunctional.getPwUserInfo;
+      let comp = document.createElement('pw-user-info');
 
-      expect(true).to.be.equal(true);
+      document.body.appendChild(comp);
+      expect(fn.runIO().get()).to.be.equal(comp);
+      document.body.removeChild(comp);
+    });
+
+    it('Should return an IO(Either.Left) if none valid PwUserInfo is found', () => {
+      let fn = HTMLFunctional.getPwUserInfo;
+      let comp = document.createElement('invalid-component');
+
+      document.body.appendChild(comp);
+      expect(fn.runIO().isLeft).to.be.equal(true);
+      document.body.removeChild(comp);
     });
   });
 
-  describe('toggleStyle() ', () => {
-    it('Should ...', () => {
+  describe('toggleAttr() ', () => {
+    it('Should return an IO(fn)', () => {
+      let fn = HTMLFunctional.toggleAttr;
+      let comp = document.createElement('div');
+      let attrs = ['yes', 'no'];
+      let io = fn(comp, 'clicked', attrs);
 
-      expect(true).to.be.equal(true);
+     comp.clicked = 'yes';
+     expect(comp.clicked).to.be.equal('yes');
+
+     io.runIO();
+     expect(comp.clicked).to.be.equal('no');
     });
   });
 
   describe('toggleAttr() ', () => {
     it('Should ...', () => {
-
+      //TODO
       expect(true).to.be.equal(true);
     });
   });
